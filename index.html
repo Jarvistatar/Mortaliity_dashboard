@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mortality Case Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: #2a3347;
+    --accent: #e8c468;
+    --accent2: #5e9cf3;
+    --accent3: #ef6c6c;
+    --accent4: #5ecfa8;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --danger: #ef6c6c;
+    --warn: #e8c468;
+    --success: #5ecfa8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 10% 0%, rgba(94,156,243,0.06) 0%, transparent 60%),
+                      radial-gradient(ellipse at 90% 100%, rgba(232,196,104,0.05) 0%, transparent 60%);
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(13,17,23,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .period-badge {
+    background: rgba(232,196,104,0.1);
+    border: 1px solid rgba(232,196,104,0.3);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    margin: 24px 40px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.01);
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent2);
+    background: rgba(94,156,243,0.04);
+  }
+  .upload-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(94,156,243,0.1);
+    border: 1px solid rgba(94,156,243,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+  .upload-text h3 { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .upload-text p { font-size: 12px; color: var(--muted); }
+  .upload-text em { color: var(--accent2); font-style: normal; }
+  #fileInput { display: none; }
+  .btn-upload {
+    margin-left: auto;
+    background: var(--accent2);
+    color: #0d1117;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .btn-upload:hover { opacity: 0.85; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    margin: 0 40px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+    margin-right: 4px;
+  }
+  select, .multi-select-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+  select:hover, select:focus { border-color: var(--accent2); }
+  .btn-reset {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-reset:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 0 40px 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.yellow::before { background: var(--accent); }
+  .stat-card.blue::before { background: var(--accent2); }
+  .stat-card.red::before { background: var(--accent3); }
+  .stat-card.green::before { background: var(--accent4); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'DM Mono', monospace; margin-bottom: 8px; }
+  .stat-value { font-family: 'DM Serif Display', serif; font-size: 36px; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* CHARTS GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 0 40px 16px;
+  }
+  .charts-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .chart-card.wide { grid-column: span 2; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+  }
+  .chart-wrap.tall { height: 300px; }
+
+  /* TABLE */
+  .table-section {
+    margin: 0 40px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .table-header h2 { font-size: 13px; font-weight: 600; }
+  .table-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: var(--text); }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(42,51,71,0.5); vertical-align: top; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+  .badge-yes { background: rgba(239,108,108,0.15); color: var(--accent3); border: 1px solid rgba(239,108,108,0.25); }
+  .badge-no { background: rgba(139,148,158,0.08); color: var(--muted); border: 1px solid rgba(139,148,158,0.15); }
+  .badge-f { background: rgba(94,207,168,0.12); color: var(--accent4); border: 1px solid rgba(94,207,168,0.2); }
+  .badge-m { background: rgba(94,156,243,0.12); color: var(--accent2); border: 1px solid rgba(94,156,243,0.2); }
+  .dept-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: rgba(232,196,104,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(232,196,104,0.2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* COMORBIDITY BARS */
+  .comorbidity-section {
+    margin: 0 40px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .comorbidity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .section-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 16px; }
+  .bar-row { margin-bottom: 10px; }
+  .bar-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; }
+  .bar-name { color: var(--text); }
+  .bar-count { color: var(--muted); font-family: 'DM Mono', monospace; }
+  .bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  /* NO DATA */
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .no-data svg { margin-bottom: 12px; opacity: 0.3; }
+  .no-data p { font-size: 14px; }
+
+  /* TOOLTIP */
+  .tooltip-container { position: relative; display: inline-block; }
+  
+  /* Pagination */
+  .pagination { display: flex; align-items: center; justify-content: flex-end; padding: 12px 22px; gap: 8px; border-top: 1px solid var(--border); }
+  .page-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 12px; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.15s; }
+  .page-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .page-btn.active { background: var(--accent2); color: #0d1117; border-color: var(--accent2); font-weight: 600; }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .page-info { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  @media (max-width: 900px) {
+    header, .upload-zone, .filter-bar, .stats-row, .charts-grid, .comorbidity-section, .table-section { margin-left: 16px; margin-right: 16px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .chart-card.wide { grid-column: span 1; }
+    .comorbidity-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-title">Mortality Dashboard</span>
+    <span class="logo-sub">Clinical Analytics</span>
+  </div>
+  <div class="header-right">
+    <span class="period-badge" id="periodBadge">No data loaded</span>
+  </div>
+</header>
+
+<!-- UPLOAD ZONE -->
+<div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+  <div class="upload-icon">ðŸ“</div>
+  <div class="upload-text">
+    <h3>Upload Mortality Case File</h3>
+    <p>Supports <em>CSV</em> and <em>CSV-UTF8</em> files â€” drag & drop or click to browse</p>
+  </div>
+  <button class="btn-upload" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Choose File</button>
+  <input type="file" id="fileInput" accept=".csv,.txt" />
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar" id="filterBar" style="display:none">
+  <span class="filter-label">Filter:</span>
+  <select id="filterDept"><option value="">All Departments</option></select>
+  <select id="filterWard"><option value="">All Wards</option></select>
+  <select id="filterGender"><option value="">All Genders</option></select>
+  <select id="filterDiag"><option value="">All Diagnoses</option></select>
+  <select id="filterAgeGroup">
+    <option value="">All Age Groups</option>
+    <option value="0-17">0â€“17 (Pediatric)</option>
+    <option value="18-44">18â€“44 (Young Adult)</option>
+    <option value="45-64">45â€“64 (Middle-aged)</option>
+    <option value="65-79">65â€“79 (Senior)</option>
+    <option value="80+">80+ (Elderly)</option>
+  </select>
+  <button class="btn-reset" onclick="resetFilters()">âœ• Reset</button>
+</div>
+
+<!-- STATS ROW -->
+<div class="stats-row" id="statsRow" style="display:none">
+  <div class="stat-card yellow">
+    <div class="stat-label">Total Deaths</div>
+    <div class="stat-value" id="statTotal">â€”</div>
+    <div class="stat-sub" id="statPeriod">â€”</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-label">Avg Age</div>
+    <div class="stat-value" id="statAge">â€”</div>
+    <div class="stat-sub" id="statAgeRange">â€”</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-label">Top Diagnosis</div>
+    <div class="stat-value" style="font-size:18px; padding-top:8px;" id="statDiag">â€”</div>
+    <div class="stat-sub" id="statDiagCount">â€”</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">Top Comorbidity</div>
+    <div class="stat-value" style="font-size:22px; padding-top:4px;" id="statComorbid">â€”</div>
+    <div class="stat-sub" id="statComorbidPct">â€”</div>
+  </div>
+</div>
+
+<!-- CHARTS ROW 1 -->
+<div class="charts-grid" id="chartsRow1" style="display:none">
+  <div class="chart-card">
+    <div class="chart-title">Deaths by Department</div>
+    <div class="chart-sub">case distribution</div>
+    <div class="chart-wrap"><canvas id="chartDept"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Gender Distribution</div>
+    <div class="chart-sub">male vs female</div>
+    <div class="chart-wrap"><canvas id="chartGender"></canvas></div>
+  </div>
+</div>
+
+<div class="charts-grid" id="chartsRow2" style="display:none">
+  <div class="chart-card">
+    <div class="chart-title">Age Distribution</div>
+    <div class="chart-sub">by decade</div>
+    <div class="chart-wrap"><canvas id="chartAge"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Principal Diagnosis</div>
+    <div class="chart-sub">top causes</div>
+    <div class="chart-wrap"><canvas id="chartDiag"></canvas></div>
+  </div>
+</div>
+
+<!-- COMORBIDITIES & COMPLICATIONS -->
+<div class="comorbidity-section" id="comorbidSection" style="display:none">
+  <div class="section-title">Comorbidities & Complications</div>
+  <div class="section-sub">prevalence among filtered cases</div>
+  <div class="comorbidity-grid">
+    <div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:12px;">Comorbidities</div>
+      <div id="comorbidBars"></div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:12px;">Complications</div>
+      <div id="complicationBars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="table-section" id="tableSection" style="display:none">
+  <div class="table-header">
+    <h2>Case Records</h2>
+    <span class="table-count" id="tableCount">0 records</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortTable('Date')">DATE â†•</th>
+          <th onclick="sortTable('HN')">HN</th>
+          <th onclick="sortTable('Department')">DEPT â†•</th>
+          <th onclick="sortTable('Ward')">WARD â†•</th>
+          <th onclick="sortTable('Gender')">GENDER â†•</th>
+          <th onclick="sortTable('Age')">AGE â†•</th>
+          <th>PRINCIPAL DIAGNOSIS</th>
+          <th>COMORBIDITIES</th>
+          <th>COMPLICATIONS</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Placeholder when no data -->
+<div class="no-data" id="noDataPlaceholder">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="1.5"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+  <p>Upload a CSV mortality file to get started</p>
+</div>
+
+<script>
+// â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let allData = [];
+let filteredData = [];
+let sortKey = 'Date';
+let sortAsc = true;
+let currentPage = 1;
+const PAGE_SIZE = 20;
+
+let charts = {};
+
+const COMORBIDITY_KEYS = ['Comorbidity - DM','Comorbidity - HT','Comorbidity - DLP','Comorbidity - Heart disease','Comorbidity - Kidney disease','Comorbidity - Lung disease','Comorbidity - Cancer','Comorbidity - Others'];
+const COMORBIDITY_LABELS = ['DM','HT','DLP','Heart Disease','Kidney Disease','Lung Disease','Cancer','Others'];
+const COMPLICATION_KEYS = ['Complication - Shock at presentation','Complication - Respiratory failure','Complication - Heart failure','Complication - Acute kidney injury'];
+const COMPLICATION_LABELS = ['Shock at Presentation','Respiratory Failure','Heart Failure','AKI'];
+
+// â”€â”€â”€ FILE HANDLING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+  if (!file) return;
+  // Try UTF-8 first, then fall back to Windows-1252 for CSV-UTC8 (BOM or encoding issues)
+  const reader = new FileReader();
+  reader.onload = (e) => parseCSV(e.target.result, file.name);
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(content, filename) {
+  // Remove BOM if present
+  if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1);
+  Papa.parse(content, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.trim(),
+    transform: v => v.trim(),
+    complete: (result) => {
+      if (!result.data.length) { alert('No data found in file.'); return; }
+      allData = result.data.map(row => {
+        // Normalize gender key (might have trailing space)
+        const genderRaw = row['Gender '] || row['Gender'] || '';
+        row['Gender'] = genderRaw.trim();
+        // Parse date
+        row._date = parseDate(row['Date']);
+        row._age = parseInt(row['Age']) || 0;
+        return row;
+      });
+      // Extract period from filename or data
+      updatePeriodBadge(filename);
+      populateFilters();
+      applyFilters();
+      showUI();
+    },
+    error: () => alert('Failed to parse CSV. Please check the file format.')
+  });
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  const parts = str.split('/');
+  if (parts.length === 3) {
+    return new Date(parts[2], parts[0]-1, parts[1]);
+  }
+  return new Date(str);
+}
+
+function updatePeriodBadge(filename) {
+  // Try to detect month/year from data
+  const dates = allData.map(r => r._date).filter(Boolean);
+  if (dates.length) {
+    const d = dates[0];
+    document.getElementById('periodBadge').textContent = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+  } else {
+    document.getElementById('periodBadge').textContent = filename;
+  }
+}
+
+// â”€â”€â”€ FILTERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function populateFilters() {
+  const depts = [...new Set(allData.map(r => r['Department']).filter(Boolean))].sort();
+  const wards = [...new Set(allData.map(r => r['Ward']).filter(Boolean))].sort();
+  const genders = [...new Set(allData.map(r => r['Gender']).filter(Boolean))].sort();
+  const diags = [...new Set(allData.map(r => r['Principal Diagnosis']).filter(Boolean))].sort();
+
+  setSelectOptions('filterDept', depts);
+  setSelectOptions('filterWard', wards);
+  setSelectOptions('filterGender', genders);
+  setSelectOptions('filterDiag', diags);
+
+  ['filterDept','filterWard','filterGender','filterDiag','filterAgeGroup'].forEach(id => {
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+}
+
+function setSelectOptions(id, values) {
+  const sel = document.getElementById(id);
+  const first = sel.options[0];
+  sel.innerHTML = '';
+  sel.appendChild(first);
+  values.forEach(v => { const o = new Option(v, v); sel.appendChild(o); });
+}
+
+function applyFilters() {
+  const dept = document.getElementById('filterDept').value;
+  const ward = document.getElementById('filterWard').value;
+  const gender = document.getElementById('filterGender').value;
+  const diag = document.getElementById('filterDiag').value;
+  const ageGroup = document.getElementById('filterAgeGroup').value;
+
+  filteredData = allData.filter(r => {
+    if (dept && r['Department'] !== dept) return false;
+    if (ward && r['Ward'] !== ward) return false;
+    if (gender && r['Gender'] !== gender) return false;
+    if (diag && r['Principal Diagnosis'] !== diag) return false;
+    if (ageGroup) {
+      const age = r._age;
+      if (ageGroup === '0-17' && !(age <= 17)) return false;
+      if (ageGroup === '18-44' && !(age >= 18 && age <= 44)) return false;
+      if (ageGroup === '45-64' && !(age >= 45 && age <= 64)) return false;
+      if (ageGroup === '65-79' && !(age >= 65 && age <= 79)) return false;
+      if (ageGroup === '80+' && !(age >= 80)) return false;
+    }
+    return true;
+  });
+
+  currentPage = 1;
+  renderAll();
+}
+
+function resetFilters() {
+  ['filterDept','filterWard','filterGender','filterDiag','filterAgeGroup'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  applyFilters();
+}
+
+// â”€â”€â”€ RENDER ALL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderAll() {
+  renderStats();
+  renderCharts();
+  renderComorbidityBars();
+  renderTable();
+}
+
+// â”€â”€â”€ STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderStats() {
+  const n = filteredData.length;
+  document.getElementById('statTotal').textContent = n;
+
+  const ages = filteredData.map(r => r._age).filter(a => a > 0);
+  const avgAge = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 'â€”';
+  const minAge = ages.length ? Math.min(...ages) : 'â€”';
+  const maxAge = ages.length ? Math.max(...ages) : 'â€”';
+  document.getElementById('statAge').textContent = avgAge;
+  document.getElementById('statAgeRange').textContent = `Range: ${minAge} â€“ ${maxAge} yrs`;
+
+  // Top diagnosis
+  const diagCount = {};
+  filteredData.forEach(r => { const d = r['Principal Diagnosis']; if(d) diagCount[d]=(diagCount[d]||0)+1; });
+  const topDiag = Object.entries(diagCount).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('statDiag').textContent = topDiag ? topDiag[0] : 'â€”';
+  document.getElementById('statDiagCount').textContent = topDiag ? `${topDiag[1]} case${topDiag[1]>1?'s':''}` : '';
+
+  // Top comorbidity
+  let topComorbid = null, topCount = 0;
+  COMORBIDITY_KEYS.forEach((k,i) => {
+    const cnt = filteredData.filter(r => (r[k]||'').toLowerCase() === 'yes').length;
+    if (cnt > topCount) { topCount = cnt; topComorbid = COMORBIDITY_LABELS[i]; }
+  });
+  document.getElementById('statComorbid').textContent = topComorbid || 'â€”';
+  document.getElementById('statComorbidPct').textContent = topCount > 0 ? `${topCount} cases (${Math.round(topCount/n*100)}%)` : '';
+
+  // Date range
+  const dates = filteredData.map(r=>r._date).filter(Boolean).sort((a,b)=>a-b);
+  if (dates.length) {
+    const fmt = d => d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    document.getElementById('statPeriod').textContent = dates.length > 1 ? `${fmt(dates[0])} â€“ ${fmt(dates[dates.length-1])}` : fmt(dates[0]);
+  }
+}
+
+// â”€â”€â”€ CHARTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const PALETTE = ['#e8c468','#5e9cf3','#ef6c6c','#5ecfa8','#c46ef0','#f07c4e','#6eb8f0','#f0d36e'];
+
+function destroyChart(key) { if (charts[key]) { charts[key].destroy(); delete charts[key]; } }
+
+function makeChart(id, config) {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, config);
+}
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+function renderCharts() {
+  const n = filteredData.length;
+
+  // Dept
+  const deptCount = {};
+  filteredData.forEach(r => { const d=r['Department']; if(d) deptCount[d]=(deptCount[d]||0)+1; });
+  const deptEntries = Object.entries(deptCount).sort((a,b)=>b[1]-a[1]);
+  makeChart('chartDept', {
+    type: 'bar',
+    data: {
+      labels: deptEntries.map(e=>e[0]),
+      datasets: [{ data: deptEntries.map(e=>e[1]), backgroundColor: PALETTE, borderRadius: 6, borderSkipped: false }]
+    },
+    options: chartOpts({ yLabel: 'Cases' })
+  });
+
+  // Gender
+  const gCount = {};
+  filteredData.forEach(r => { const g=r['Gender']; if(g) gCount[g]=(gCount[g]||0)+1; });
+  const gEntries = Object.entries(gCount);
+  makeChart('chartGender', {
+    type: 'doughnut',
+    data: {
+      labels: gEntries.map(e=>e[0]),
+      datasets: [{ data: gEntries.map(e=>e[1]), backgroundColor: ['#5ecfa8','#5e9cf3','#e8c468'], borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 } }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/n*100)}%)` } } }
+    }
+  });
+
+  // Age by decade
+  const ageBuckets = {'0-9':0,'10-19':0,'20-29':0,'30-39':0,'40-49':0,'50-59':0,'60-69':0,'70-79':0,'80-89':0,'90+':0};
+  filteredData.forEach(r => {
+    const a = r._age;
+    if (a < 10) ageBuckets['0-9']++;
+    else if (a < 20) ageBuckets['10-19']++;
+    else if (a < 30) ageBuckets['20-29']++;
+    else if (a < 40) ageBuckets['30-39']++;
+    else if (a < 50) ageBuckets['40-49']++;
+    else if (a < 60) ageBuckets['50-59']++;
+    else if (a < 70) ageBuckets['60-69']++;
+    else if (a < 80) ageBuckets['70-79']++;
+    else if (a < 90) ageBuckets['80-89']++;
+    else ageBuckets['90+']++;
+  });
+  makeChart('chartAge', {
+    type: 'bar',
+    data: {
+      labels: Object.keys(ageBuckets),
+      datasets: [{ label: 'Cases', data: Object.values(ageBuckets), backgroundColor: 'rgba(94,156,243,0.7)', borderRadius: 5, borderSkipped: false }]
+    },
+    options: chartOpts({ yLabel: 'Cases' })
+  });
+
+  // Diagnosis
+  const dxCount = {};
+  filteredData.forEach(r => { const d=r['Principal Diagnosis']; if(d) dxCount[d]=(dxCount[d]||0)+1; });
+  const dxEntries = Object.entries(dxCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  makeChart('chartDiag', {
+    type: 'bar',
+    data: {
+      labels: dxEntries.map(e => e[0].length > 30 ? e[0].slice(0,28)+'â€¦' : e[0]),
+      datasets: [{ data: dxEntries.map(e=>e[1]), backgroundColor: 'rgba(239,108,108,0.75)', borderRadius: 5, borderSkipped: false }]
+    },
+    options: { ...chartOpts({ yLabel: 'Cases', indexAxis: 'y' }), }
+  });
+}
+
+function chartOpts({ yLabel = '', indexAxis = 'x' } = {}) {
+  return {
+    indexAxis,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed[indexAxis==='y'?'x':'y']} cases` } } },
+    scales: {
+      x: { grid: { color: 'rgba(42,51,71,0.6)' }, ticks: { maxRotation: 30, ...(indexAxis === 'y' ? { stepSize: 1, precision: 0 } : {}) } },
+      y: { grid: { color: 'rgba(42,51,71,0.6)' }, beginAtZero: true, ...(indexAxis !== 'y' ? { ticks: { stepSize: 1, precision: 0 } } : {}) }
+    }
+  };
+}
+
+// â”€â”€â”€ COMORBIDITY BARS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderComorbidityBars() {
+  const n = filteredData.length || 1;
+  renderBars('comorbidBars', COMORBIDITY_KEYS, COMORBIDITY_LABELS, 'rgba(232,196,104,0.7)', n);
+  renderBars('complicationBars', COMPLICATION_KEYS, COMPLICATION_LABELS, 'rgba(239,108,108,0.7)', n);
+}
+
+function renderBars(containerId, keys, labels, color, total) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const counts = keys.map(k => filteredData.filter(r=>(r[k]||'').toLowerCase()==='yes').length);
+  const max = Math.max(...counts, 1);
+  counts.forEach((cnt, i) => {
+    const pct = Math.round(cnt/total*100);
+    container.innerHTML += `
+      <div class="bar-row">
+        <div class="bar-label">
+          <span class="bar-name">${labels[i]}</span>
+          <span class="bar-count">${cnt} / ${pct}%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${cnt/max*100}%; background:${color}"></div>
+        </div>
+      </div>`;
+  });
+}
+
+// â”€â”€â”€ TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function sortTable(key) {
+  if (sortKey === key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = true; }
+  renderTable();
+}
+
+function renderTable() {
+  const sorted = [...filteredData].sort((a,b) => {
+    let va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
+    if (sortKey === 'Age') { va = a._age; vb = b._age; }
+    if (sortKey === 'Date') { va = a._date||0; vb = b._date||0; }
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const total = sorted.length;
+  document.getElementById('tableCount').textContent = `${total} record${total!==1?'s':''}`;
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages);
+  const pageData = sorted.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  const COMORBID_COLS = ['Comorbidity - DM','Comorbidity - HT','Comorbidity - DLP','Comorbidity - Heart disease','Comorbidity - Kidney disease','Comorbidity - Lung disease','Comorbidity - Cancer','Comorbidity - Others'];
+  const COMPLIC_COLS = ['Complication - Shock at presentation','Complication - Respiratory failure','Complication - Heart failure','Complication - Acute kidney injury'];
+  const COMORBID_SHORT = ['DM','HT','DLP','Heart','Kidney','Lung','Cancer','Others'];
+  const COMPLIC_SHORT = ['Shock','Resp Fail','Heart Fail','AKI'];
+
+  pageData.forEach(r => {
+    const tr = document.createElement('tr');
+
+    // Build horizontal comorbidity tags (only "Yes" ones)
+    const comorbidTags = COMORBID_COLS.map((k, i) => {
+      return (r[k]||'').toLowerCase() === 'yes'
+        ? `<span class="badge badge-yes" style="margin:2px 3px 2px 0;display:inline-block">${COMORBID_SHORT[i]}</span>`
+        : '';
+    }).join('');
+
+    // Build horizontal complication tags (only "Yes" ones)
+    const complicTags = COMPLIC_COLS.map((k, i) => {
+      return (r[k]||'').toLowerCase() === 'yes'
+        ? `<span class="badge badge-yes" style="margin:2px 3px 2px 0;display:inline-block">${COMPLIC_SHORT[i]}</span>`
+        : '';
+    }).join('');
+
+    tr.innerHTML = `
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${r['Date']||''}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${r['HN']||''}</td>
+      <td><span class="dept-tag">${r['Department']||''}</span></td>
+      <td style="color:var(--muted)">${r['Ward']||''}</td>
+      <td><span class="badge ${r['Gender']==='Female'?'badge-f':'badge-m'}">${r['Gender']||''}</span></td>
+      <td style="font-family:'DM Mono',monospace">${r['Age']||''}</td>
+      <td style="max-width:220px;white-space:normal;font-size:12px">${r['Principal Diagnosis']||''}</td>
+      <td style="max-width:220px;white-space:normal">${comorbidTags || '<span style="color:var(--muted);font-size:11px">â€”</span>'}</td>
+      <td style="max-width:200px;white-space:normal">${complicTags || '<span style="color:var(--muted);font-size:11px">â€”</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Pagination
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  const prev = document.createElement('button');
+  prev.className = 'page-btn'; prev.textContent = 'â†';
+  prev.disabled = currentPage === 1;
+  prev.onclick = () => { currentPage--; renderTable(); };
+  pag.appendChild(prev);
+
+  const info = document.createElement('span');
+  info.className = 'page-info';
+  info.textContent = `Page ${currentPage} / ${totalPages}`;
+  pag.appendChild(info);
+
+  const next = document.createElement('button');
+  next.className = 'page-btn'; next.textContent = 'â†’';
+  next.disabled = currentPage === totalPages;
+  next.onclick = () => { currentPage++; renderTable(); };
+  pag.appendChild(next);
+}
+
+// â”€â”€â”€ UI SHOW/HIDE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function showUI() {
+  document.getElementById('noDataPlaceholder').style.display = 'none';
+  document.getElementById('filterBar').style.display = 'flex';
+  document.getElementById('statsRow').style.display = 'grid';
+  document.getElementById('chartsRow1').style.display = 'grid';
+  document.getElementById('chartsRow2').style.display = 'grid';
+  document.getElementById('comorbidSection').style.display = 'block';
+  document.getElementById('tableSection').style.display = 'block';
+}
+</script>
+</body>
+</html>
