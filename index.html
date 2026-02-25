@@ -371,10 +371,10 @@
 
 <!-- UPLOAD ZONE -->
 <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-  <div class="upload-icon">ðŸ“</div>
+  <div class="upload-icon">📁</div>
   <div class="upload-text">
     <h3>Upload Mortality Case File</h3>
-    <p>Supports <em>CSV</em> and <em>CSV-UTF8</em> files â€” drag & drop or click to browse</p>
+    <p>Supports <em>CSV</em> and <em>CSV-UTF8</em> files — drag & drop or click to browse</p>
   </div>
   <button class="btn-upload" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Choose File</button>
   <input type="file" id="fileInput" accept=".csv,.txt" />
@@ -389,36 +389,36 @@
   <select id="filterDiag"><option value="">All Diagnoses</option></select>
   <select id="filterAgeGroup">
     <option value="">All Age Groups</option>
-    <option value="0-17">0â€“17 (Pediatric)</option>
-    <option value="18-44">18â€“44 (Young Adult)</option>
-    <option value="45-64">45â€“64 (Middle-aged)</option>
-    <option value="65-79">65â€“79 (Senior)</option>
+    <option value="0-17">0–17 (Pediatric)</option>
+    <option value="18-44">18–44 (Young Adult)</option>
+    <option value="45-64">45–64 (Middle-aged)</option>
+    <option value="65-79">65–79 (Senior)</option>
     <option value="80+">80+ (Elderly)</option>
   </select>
-  <button class="btn-reset" onclick="resetFilters()">âœ• Reset</button>
+  <button class="btn-reset" onclick="resetFilters()">✕ Reset</button>
 </div>
 
 <!-- STATS ROW -->
 <div class="stats-row" id="statsRow" style="display:none">
   <div class="stat-card yellow">
     <div class="stat-label">Total Deaths</div>
-    <div class="stat-value" id="statTotal">â€”</div>
-    <div class="stat-sub" id="statPeriod">â€”</div>
+    <div class="stat-value" id="statTotal">—</div>
+    <div class="stat-sub" id="statPeriod">—</div>
   </div>
   <div class="stat-card blue">
     <div class="stat-label">Avg Age</div>
-    <div class="stat-value" id="statAge">â€”</div>
-    <div class="stat-sub" id="statAgeRange">â€”</div>
+    <div class="stat-value" id="statAge">—</div>
+    <div class="stat-sub" id="statAgeRange">—</div>
   </div>
   <div class="stat-card red">
     <div class="stat-label">Top Diagnosis</div>
-    <div class="stat-value" style="font-size:18px; padding-top:8px;" id="statDiag">â€”</div>
-    <div class="stat-sub" id="statDiagCount">â€”</div>
+    <div class="stat-value" style="font-size:18px; padding-top:8px;" id="statDiag">—</div>
+    <div class="stat-sub" id="statDiagCount">—</div>
   </div>
   <div class="stat-card green">
     <div class="stat-label">Top Comorbidity</div>
-    <div class="stat-value" style="font-size:22px; padding-top:4px;" id="statComorbid">â€”</div>
-    <div class="stat-sub" id="statComorbidPct">â€”</div>
+    <div class="stat-value" style="font-size:22px; padding-top:4px;" id="statComorbid">—</div>
+    <div class="stat-sub" id="statComorbidPct">—</div>
   </div>
 </div>
 
@@ -475,12 +475,12 @@
     <table>
       <thead>
         <tr>
-          <th onclick="sortTable('Date')">DATE â†•</th>
+          <th onclick="sortTable('Date')">DATE ↕</th>
           <th onclick="sortTable('HN')">HN</th>
-          <th onclick="sortTable('Department')">DEPT â†•</th>
-          <th onclick="sortTable('Ward')">WARD â†•</th>
-          <th onclick="sortTable('Gender')">GENDER â†•</th>
-          <th onclick="sortTable('Age')">AGE â†•</th>
+          <th onclick="sortTable('Department')">DEPT ↕</th>
+          <th onclick="sortTable('Ward')">WARD ↕</th>
+          <th onclick="sortTable('Gender')">GENDER ↕</th>
+          <th onclick="sortTable('Age')">AGE ↕</th>
           <th>PRINCIPAL DIAGNOSIS</th>
           <th>COMORBIDITIES</th>
           <th>COMPLICATIONS</th>
@@ -499,7 +499,7 @@
 </div>
 
 <script>
-// â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STATE ──────────────────────────────────────────────────────────────────
 let allData = [];
 let filteredData = [];
 let sortKey = 'Date';
@@ -514,7 +514,7 @@ const COMORBIDITY_LABELS = ['DM','HT','DLP','Heart Disease','Kidney Disease','Lu
 const COMPLICATION_KEYS = ['Complication - Shock at presentation','Complication - Respiratory failure','Complication - Heart failure','Complication - Acute kidney injury'];
 const COMPLICATION_LABELS = ['Shock at Presentation','Respiratory Failure','Heart Failure','AKI'];
 
-// â”€â”€â”€ FILE HANDLING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FILE HANDLING ────────────────────────────────────────────────────────
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 
@@ -580,7 +580,7 @@ function updatePeriodBadge(filename) {
   }
 }
 
-// â”€â”€â”€ FILTERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FILTERS ────────────────────────────────────────────────────────────────
 function populateFilters() {
   const depts = [...new Set(allData.map(r => r['Department']).filter(Boolean))].sort();
   const wards = [...new Set(allData.map(r => r['Ward']).filter(Boolean))].sort();
@@ -639,7 +639,7 @@ function resetFilters() {
   applyFilters();
 }
 
-// â”€â”€â”€ RENDER ALL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── RENDER ALL ─────────────────────────────────────────────────────────────
 function renderAll() {
   renderStats();
   renderCharts();
@@ -647,23 +647,23 @@ function renderAll() {
   renderTable();
 }
 
-// â”€â”€â”€ STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STATS ──────────────────────────────────────────────────────────────────
 function renderStats() {
   const n = filteredData.length;
   document.getElementById('statTotal').textContent = n;
 
   const ages = filteredData.map(r => r._age).filter(a => a > 0);
-  const avgAge = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 'â€”';
-  const minAge = ages.length ? Math.min(...ages) : 'â€”';
-  const maxAge = ages.length ? Math.max(...ages) : 'â€”';
+  const avgAge = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : '—';
+  const minAge = ages.length ? Math.min(...ages) : '—';
+  const maxAge = ages.length ? Math.max(...ages) : '—';
   document.getElementById('statAge').textContent = avgAge;
-  document.getElementById('statAgeRange').textContent = `Range: ${minAge} â€“ ${maxAge} yrs`;
+  document.getElementById('statAgeRange').textContent = `Range: ${minAge} – ${maxAge} yrs`;
 
   // Top diagnosis
   const diagCount = {};
   filteredData.forEach(r => { const d = r['Principal Diagnosis']; if(d) diagCount[d]=(diagCount[d]||0)+1; });
   const topDiag = Object.entries(diagCount).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('statDiag').textContent = topDiag ? topDiag[0] : 'â€”';
+  document.getElementById('statDiag').textContent = topDiag ? topDiag[0] : '—';
   document.getElementById('statDiagCount').textContent = topDiag ? `${topDiag[1]} case${topDiag[1]>1?'s':''}` : '';
 
   // Top comorbidity
@@ -672,18 +672,18 @@ function renderStats() {
     const cnt = filteredData.filter(r => (r[k]||'').toLowerCase() === 'yes').length;
     if (cnt > topCount) { topCount = cnt; topComorbid = COMORBIDITY_LABELS[i]; }
   });
-  document.getElementById('statComorbid').textContent = topComorbid || 'â€”';
+  document.getElementById('statComorbid').textContent = topComorbid || '—';
   document.getElementById('statComorbidPct').textContent = topCount > 0 ? `${topCount} cases (${Math.round(topCount/n*100)}%)` : '';
 
   // Date range
   const dates = filteredData.map(r=>r._date).filter(Boolean).sort((a,b)=>a-b);
   if (dates.length) {
     const fmt = d => d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
-    document.getElementById('statPeriod').textContent = dates.length > 1 ? `${fmt(dates[0])} â€“ ${fmt(dates[dates.length-1])}` : fmt(dates[0]);
+    document.getElementById('statPeriod').textContent = dates.length > 1 ? `${fmt(dates[0])} – ${fmt(dates[dates.length-1])}` : fmt(dates[0]);
   }
 }
 
-// â”€â”€â”€ CHARTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CHARTS ─────────────────────────────────────────────────────────────────
 const PALETTE = ['#e8c468','#5e9cf3','#ef6c6c','#5ecfa8','#c46ef0','#f07c4e','#6eb8f0','#f0d36e'];
 
 function destroyChart(key) { if (charts[key]) { charts[key].destroy(); delete charts[key]; } }
@@ -761,7 +761,7 @@ function renderCharts() {
   makeChart('chartDiag', {
     type: 'bar',
     data: {
-      labels: dxEntries.map(e => e[0].length > 30 ? e[0].slice(0,28)+'â€¦' : e[0]),
+      labels: dxEntries.map(e => e[0].length > 30 ? e[0].slice(0,28)+'…' : e[0]),
       datasets: [{ data: dxEntries.map(e=>e[1]), backgroundColor: 'rgba(239,108,108,0.75)', borderRadius: 5, borderSkipped: false }]
     },
     options: { ...chartOpts({ yLabel: 'Cases', indexAxis: 'y' }), }
@@ -781,7 +781,7 @@ function chartOpts({ yLabel = '', indexAxis = 'x' } = {}) {
   };
 }
 
-// â”€â”€â”€ COMORBIDITY BARS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── COMORBIDITY BARS ───────────────────────────────────────────────────────
 function renderComorbidityBars() {
   const n = filteredData.length || 1;
   renderBars('comorbidBars', COMORBIDITY_KEYS, COMORBIDITY_LABELS, 'rgba(232,196,104,0.7)', n);
@@ -808,7 +808,7 @@ function renderBars(containerId, keys, labels, color, total) {
   });
 }
 
-// â”€â”€â”€ TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── TABLE ──────────────────────────────────────────────────────────────────
 function sortTable(key) {
   if (sortKey === key) sortAsc = !sortAsc;
   else { sortKey = key; sortAsc = true; }
@@ -865,8 +865,8 @@ function renderTable() {
       <td><span class="badge ${r['Gender']==='Female'?'badge-f':'badge-m'}">${r['Gender']||''}</span></td>
       <td style="font-family:'DM Mono',monospace">${r['Age']||''}</td>
       <td style="max-width:220px;white-space:normal;font-size:12px">${r['Principal Diagnosis']||''}</td>
-      <td style="max-width:220px;white-space:normal">${comorbidTags || '<span style="color:var(--muted);font-size:11px">â€”</span>'}</td>
-      <td style="max-width:200px;white-space:normal">${complicTags || '<span style="color:var(--muted);font-size:11px">â€”</span>'}</td>
+      <td style="max-width:220px;white-space:normal">${comorbidTags || '<span style="color:var(--muted);font-size:11px">—</span>'}</td>
+      <td style="max-width:200px;white-space:normal">${complicTags || '<span style="color:var(--muted);font-size:11px">—</span>'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -877,7 +877,7 @@ function renderTable() {
   if (totalPages <= 1) return;
 
   const prev = document.createElement('button');
-  prev.className = 'page-btn'; prev.textContent = 'â†';
+  prev.className = 'page-btn'; prev.textContent = '←';
   prev.disabled = currentPage === 1;
   prev.onclick = () => { currentPage--; renderTable(); };
   pag.appendChild(prev);
@@ -888,13 +888,13 @@ function renderTable() {
   pag.appendChild(info);
 
   const next = document.createElement('button');
-  next.className = 'page-btn'; next.textContent = 'â†’';
+  next.className = 'page-btn'; next.textContent = '→';
   next.disabled = currentPage === totalPages;
   next.onclick = () => { currentPage++; renderTable(); };
   pag.appendChild(next);
 }
 
-// â”€â”€â”€ UI SHOW/HIDE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UI SHOW/HIDE ───────────────────────────────────────────────────────────
 function showUI() {
   document.getElementById('noDataPlaceholder').style.display = 'none';
   document.getElementById('filterBar').style.display = 'flex';
